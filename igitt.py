@@ -1,10 +1,38 @@
 #! /usr/bin/env python
 
+"""
+Simple helper script for cloning and pulling multiple git repositories in a
+specific directory.
+
+This script is useful if you work with 'mr.developer' sources for project
+development or if you want to perform backups of a github account.
+
+Usage
+-----
+
+For cloning repositories, use:
+    igitt clone CONTEXT [PACKAGE]
+
+For updating repositories, use:
+    igitt pull [PACKAGE]
+
+Install
+-------
+
+Checkout this script and create a symlink in '/usr/local/bin'.
+
+Note
+----
+
+The script always works relative to the directory it was called in.
+"""
+
 import os
 import sys
 import urllib2
 import json
 import subprocess
+
 
 def query_repos(context):
     url = 'http://github.com/api/v2/json/repos/show/%s' % context
@@ -17,11 +45,15 @@ def query_repos(context):
     res.close()
     return data
 
+
 def print_usage_and_exit():
     print "Usage:"
-    print "igitt clone context (package)"
-    print "igitt pull (package)"
+    print "For cloning repositories, use:"
+    print "    igitt clone CONTEXT [PACKAGE]"
+    print "For updating repositories, use:"
+    print "    igitt pull [PACKAGE]"
     sys.exit(0)
+
 
 def perform_clone(context, package):
     base_uri = 'git@github.com:%s/%s.git'
@@ -39,11 +71,24 @@ def perform_clone(context, package):
         cmd = ['git', 'clone', uri]
         subprocess.call(cmd)
 
+
+def get_branch():
+    cmd = 'git branch'
+    p = subprocess.Popen(
+        cmd, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE, close_fds=True)
+    output = p.stdout.readlines()
+    for line in output:
+        if line.strip().startswith('*'):
+            return line.strip().strip('*').strip()
+
+
 def perform_pull(package):
     if package is not None:
+        print "Perform pull for '%s'" % package
         os.chdir(package)
-        # XXX: check for actual branch and define origin.
-        cmd = ['git', 'pull']
+        branch = get_branch()
+        cmd = ['git', 'pull', 'origin', branch]
         subprocess.call(cmd)
         return
     
@@ -55,10 +100,12 @@ def perform_pull(package):
         if not '.git' in os.listdir('.'):
             os.chdir('..')
             continue
-        # XXX: check for actual branch and define origin.
-        cmd = ['git', 'pull']
+        print "Perform pull for '%s'" % child
+        branch = get_branch()
+        cmd = ['git', 'pull', 'origin', branch]
         subprocess.call(cmd)
         os.chdir('..')
+
 
 if __name__ == '__main__':
     args = sys.argv
