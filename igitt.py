@@ -118,11 +118,13 @@ def perform_backup(context):
         name = repo['name']
         fs_name = '%s.git' % name
         if fs_name in contents:
+            print "Fetching existing local repository '%s'" % fs_name
             os.chdir(fs_name)
             cmd = ['git', 'fetch', 'origin']
             subprocess.call(cmd)
             os.chdir('..')
         else:
+            print "Cloning new repository '%s'" % fs_name
             uri = base_uri % (context, name)
             cmd = ['git', 'clone', '--bare', '--mirror', uri]
             subprocess.call(cmd)
