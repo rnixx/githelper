@@ -22,6 +22,9 @@ For backup of context, use:
 For checking repository state, use:
     igitt st [PACKAGE]
 
+For listing repository branch, use:
+    igitt b [PACKAGE]
+
 Install
 -------
 
@@ -57,6 +60,8 @@ def print_usage_and_exit():
     print "    igitt backup CONTEXT"
     print "For checking repository state, use:"
     print "    igitt st [PACKAGE]"
+    print "For listing repository branch, use:"
+    print "    igitt b [PACKAGE]"
     sys.exit(0)
 
 
@@ -157,6 +162,28 @@ def perform_st(package):
         os.chdir('..')
 
 
+def perform_b(package):
+    if package is not None:
+        print "Branches for '%s'" % package
+        os.chdir(package)
+        cmd = ['git', 'branch']
+        subprocess.call(cmd)
+        return
+    
+    contents = os.listdir('.')
+    for child in contents:
+        if not os.path.isdir(child):
+            continue
+        os.chdir(child)
+        if not '.git' in os.listdir('.'):
+            os.chdir('..')
+            continue
+        print "Branches for '%s'" % child
+        cmd = ['git', 'branch']
+        subprocess.call(cmd)
+        os.chdir('..')
+
+
 if __name__ == '__main__':
     args = sys.argv
     if len(args) < 2:
@@ -164,7 +191,7 @@ if __name__ == '__main__':
         print_usage_and_exit()
     
     action = args[1]
-    if action not in ['clone', 'pull', 'backup', 'st']:
+    if action not in ['clone', 'pull', 'backup', 'st', 'b']:
         print "Invalid action '%s'" % action
         print_usage_and_exit()
     
@@ -199,6 +226,13 @@ if __name__ == '__main__':
         if len(args) > 2:
             package = args[2]
         perform_st(package)
+        sys.exit(0)
+    
+    if action == 'b':
+        package = None
+        if len(args) > 2:
+            package = args[2]
+        perform_b(package)
         sys.exit(0)
     
     print "Invalid action '%s'" % action
