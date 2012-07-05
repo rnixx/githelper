@@ -39,12 +39,16 @@ import subprocess
 
 
 def query_repos(context):
-    url = 'http://github.com/api/v2/json/repos/show/%s' % context
+    org_url = 'https://api.github.com/orgs/%s/repos' % context
+    user_url = 'https://api.github.com/users/%s/repos' % context
     try:
-        res = urllib2.urlopen(url)
+        res = urllib2.urlopen(org_url)
     except urllib2.URLError, e:
-        print e
-        sys.exit(0)
+        try:
+            res = urllib2.urlopen(user_url)
+        except urllib2.URLError, e:
+            print e
+            sys.exit(0)
     data = json.loads(res.read())
     res.close()
     return data
@@ -75,7 +79,7 @@ def perform_clone(context, package):
     
     data = query_repos(context)
     base_uri = 'git@github.com:%s/%s.git'
-    for repo in data['repositories']:
+    for repo in data:
         name = repo['name']
         uri = base_uri % (context, name)
         cmd = ['git', 'clone', uri]
@@ -124,7 +128,7 @@ def perform_backup(context):
     contents = os.listdir('.')
     data = query_repos(context)
     base_uri = 'git@github.com:%s/%s.git'
-    for repo in data['repositories']:
+    for repo in data:
         name = repo['name']
         fs_name = '%s.git' % name
         if fs_name in contents:
