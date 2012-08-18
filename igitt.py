@@ -41,15 +41,16 @@ import subprocess
 def query_repos(context):
     org_url = 'https://api.github.com/orgs/%s/repos' % context
     user_url = 'https://api.github.com/users/%s/repos' % context
+    query = '%s?page=%i&per_page=50'
     data = list()
     page = 1
     while True:
         try:
-            url = '%s?page=%i&per_page=50' % (org_url, page)
+            url = query % (org_url, page)
             res = urllib2.urlopen(url)
         except urllib2.URLError, e:
             try:
-                url = '%s?page=%i&per_page=50' % (user_url, page)
+                url = query % (user_url, page)
                 res = urllib2.urlopen(url)
             except urllib2.URLError, e:
                 print e
