@@ -36,6 +36,10 @@ import sys
 import urllib2
 import json
 import subprocess
+from argparse import ArgumentParser
+
+mainparser = ArgumentParser(description='git helper utilities')
+subparsers = mainparser.add_subparsers(help='commands')
 
 
 def query_repos(context):
@@ -65,36 +69,24 @@ def query_repos(context):
     return data
 
 
-def print_usage_and_exit():
-    print "Usage:"
-    print "For cloning repositories, use:"
-    print "    igitt clone CONTEXT [PACKAGE]"
-    print "For updating repositories, use:"
-    print "    igitt pull [PACKAGE]"
-    print "For backup of context, use:"
-    print "    igitt backup CONTEXT"
-    print "For checking repository state, use:"
-    print "    igitt st [PACKAGE]"
-    print "For listing repository branch, use:"
-    print "    igitt b [PACKAGE]"
-    sys.exit(0)
-
-
-def perform_clone(context, package):
+def perform_clone(arguments):
     base_uri = 'git@github.com:%s/%s.git'
-    if package is not None:
-        uri = base_uri % (context, package)
+    context = arguments.context[0]
+    if arguments.repository:
+        repos = arguments.repository
+    else:
+        repos = [_['name'] for _ in query_repos(args.context)]
+    for repo in repos:
+        uri = base_uri % (context, repo)
         cmd = ['git', 'clone', uri]
         subprocess.call(cmd)
-        return
-    
-    data = query_repos(context)
-    base_uri = 'git@github.com:%s/%s.git'
-    for repo in data:
-        name = repo['name']
-        uri = base_uri % (context, name)
-        cmd = ['git', 'clone', uri]
-        subprocess.call(cmd)
+
+sub = subparsers.add_parser('clone',
+                            help='Clone from an organisation or a user')
+sub.add_argument('context', nargs=1, help='name of organisation or user')
+sub.add_argument('repository', nargs='*',
+                 help='name of repositories to fetch, leave empty to fetch all')
+sub.set_defaults(func=perform_clone)
 
 
 def get_branch():
@@ -108,31 +100,32 @@ def get_branch():
             return line.strip().strip('*').strip()
 
 
-def perform_pull(package):
-    if package is not None:
-        print "Perform pull for '%s'" % package
-        os.chdir(package)
-        branch = get_branch()
-        cmd = ['git', 'pull', 'origin', branch]
-        subprocess.call(cmd)
-        return
-    
-    contents = os.listdir('.')
-    for child in contents:
+def perform_pull(arguments):
+    if arguments.repository:
+        dirnames = arguments.repository
+    else:
+        dirnames = os.listdir('.')
+
+    for child in dirnames:
         if not os.path.isdir(child):
             continue
-        os.chdir(child)
-        if not '.git' in os.listdir('.'):
-            os.chdir('..')
+        if not '.git' in os.listdir(child):
             continue
+        os.chdir(child)
         print "Perform pull for '%s'" % child
-        branch = get_branch()
-        cmd = ['git', 'pull', 'origin', branch]
+        cmd = ['git', 'pull', 'origin', get_branch()]
         subprocess.call(cmd)
         os.chdir('..')
 
+sub = subparsers.add_parser('pull',
+                            help='Pull distinct or all repositories in  folder.')
+sub.add_argument('repository', nargs='*',
+                 help='name of repositories to fetch, leave empty to fetch all')
+sub.set_defaults(func=perform_pull)
 
-def perform_backup(context):
+
+def perform_backup(arguments):
+    context = arguments.context
     if not context in os.listdir('.'):
         os.mkdir(context)
     os.chdir(context)
@@ -154,101 +147,63 @@ def perform_backup(context):
             cmd = ['git', 'clone', '--bare', '--mirror', uri]
             subprocess.call(cmd)
 
+sub = subparsers.add_parser('backup',
+                            help='Backup all repositories from an organisation '
+                                 'or a user')
+sub.add_argument('context', nargs=1, help='name of organisation or user')
+sub.set_defaults(func=perform_backup)
 
-def perform_st(package):
-    if package is not None:
-        print "Status for '%s'" % package
-        os.chdir(package)
-        cmd = ['git', 'status']
-        subprocess.call(cmd)
-        return
-    
-    contents = os.listdir('.')
-    for child in contents:
+
+def perform_status(arguments):
+    if arguments.repository:
+        dirnames = arguments.repository
+    else:
+        dirnames = os.listdir('.')
+
+    for child in dirnames:
         if not os.path.isdir(child):
             continue
-        os.chdir(child)
-        if not '.git' in os.listdir('.'):
-            os.chdir('..')
+        if not '.git' in os.listdir(child):
             continue
+        os.chdir(child)
         print "Status for '%s'" % child
         cmd = ['git', 'status']
         subprocess.call(cmd)
         os.chdir('..')
 
+sub = subparsers.add_parser('st',
+                            help='Status of distinct or all repositories in '
+                                 'current folder.')
+sub.add_argument('repository', nargs='*',
+                 help='name of repositories to check, leave empty to check all')
+sub.set_defaults(func=perform_status)
 
-def perform_b(package):
-    if package is not None:
-        print "Branches for '%s'" % package
-        os.chdir(package)
-        cmd = ['git', 'branch']
-        subprocess.call(cmd)
-        return
-    
-    contents = os.listdir('.')
-    for child in contents:
+
+def perform_b(arguments):
+    if arguments.repository:
+        dirnames = arguments.repository
+    else:
+        dirnames = os.listdir('.')
+
+    for child in dirnames:
         if not os.path.isdir(child):
             continue
-        os.chdir(child)
-        if not '.git' in os.listdir('.'):
-            os.chdir('..')
+        if not '.git' in os.listdir(child):
             continue
+        os.chdir(child)
         print "Branches for '%s'" % child
         cmd = ['git', 'branch']
         subprocess.call(cmd)
         os.chdir('..')
 
 
+sub = subparsers.add_parser('b',
+                            help='Show branches of distinct or all '
+                                 'repositories in current folder.')
+sub.add_argument('repository', nargs='*',
+                 help='name of repositories to show, leave empty to show all')
+sub.set_defaults(func=perform_b)
+
 if __name__ == '__main__':
-    args = sys.argv
-    if len(args) < 2:
-        print "No action specified. Aborting."
-        print_usage_and_exit()
-    
-    action = args[1]
-    if action not in ['clone', 'pull', 'backup', 'st', 'b']:
-        print "Invalid action '%s'" % action
-        print_usage_and_exit()
-    
-    if action == 'clone':
-        if len(args) < 3:
-            print "No context specified. Aborting."
-            print_usage_and_exit()
-        context = args[2]
-        package = None
-        if len(args) > 3:
-            package = args[3]
-        perform_clone(context, package)
-        sys.exit(0)
-    
-    if action == 'pull':
-        package = None
-        if len(args) > 2:
-            package = args[2]
-        perform_pull(package)
-        sys.exit(0)
-    
-    if action == 'backup':
-        if len(args) != 3:
-            print "Need context to perform backup"
-            print_usage_and_exit()
-        context = args[2]
-        perform_backup(context)
-        sys.exit(0)
-    
-    if action == 'st':
-        package = None
-        if len(args) > 2:
-            package = args[2]
-        perform_st(package)
-        sys.exit(0)
-    
-    if action == 'b':
-        package = None
-        if len(args) > 2:
-            package = args[2]
-        perform_b(package)
-        sys.exit(0)
-    
-    print "Invalid action '%s'" % action
-    print_usage_and_exit()
+    args = mainparser.parse_args()
+    args.func(args)
