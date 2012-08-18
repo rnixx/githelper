@@ -41,16 +41,26 @@ import subprocess
 def query_repos(context):
     org_url = 'https://api.github.com/orgs/%s/repos' % context
     user_url = 'https://api.github.com/users/%s/repos' % context
-    try:
-        res = urllib2.urlopen(org_url)
-    except urllib2.URLError, e:
+    data = list()
+    page = 1
+    while True:
         try:
-            res = urllib2.urlopen(user_url)
+            url = '%s?page=%i&per_page=50' % (org_url, page)
+            res = urllib2.urlopen(url)
         except urllib2.URLError, e:
-            print e
-            sys.exit(0)
-    data = json.loads(res.read())
-    res.close()
+            try:
+                url = '%s?page=%i&per_page=50' % (user_url, page)
+                res = urllib2.urlopen(url)
+            except urllib2.URLError, e:
+                print e
+                sys.exit(0)
+        page_data = json.loads(res.read())
+        res.close()
+        if not page_data:
+            break
+        data += page_data
+        page += 1
+    print "Fetched %i reposirories for '%s'" % (len(data), context)
     return data
 
 
