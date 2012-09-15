@@ -125,7 +125,7 @@ sub.set_defaults(func=perform_pull)
 
 
 def perform_backup(arguments):
-    context = arguments.context
+    context = arguments.context[0]
     if not context in os.listdir('.'):
         os.mkdir(context)
     os.chdir(context)
