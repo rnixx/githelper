@@ -1,11 +1,12 @@
 #! /usr/bin/env python
 
 """
-Simple helper script for cloning and pulling multiple git repositories in a
+Simple helper script for working on multiple git repositories in a
 specific directory.
 
 This script is useful if you work with 'mr.developer' sources for project
 development or if you want to perform backups of a github account.
+
 
 Usage
 -----
@@ -25,10 +26,22 @@ For checking repository state, use:
 For listing repository branch, use:
     igitt b [PACKAGE]
 
+For showing repository diff, use:
+    igitt diff [PACKAGE]
+
+For committing all repository changes, use:
+    igitt cia 'MESSAGE' [PACKAGE]
+
+For pushing all committed changes, use:
+    igitt push [PACKAGE]
+
+
 Install
 -------
 
 Checkout this script and create a symlink in '/usr/local/bin'.
+
+This script requires python2.7 or python2.6 with 'argparse' package installed
 """
 
 import os
@@ -38,7 +51,8 @@ import json
 import subprocess
 from argparse import ArgumentParser
 
-mainparser = ArgumentParser(description='git helper utilities')
+
+mainparser = ArgumentParser(description='Git helper utilities')
 subparsers = mainparser.add_subparsers(help='commands')
 
 
@@ -81,11 +95,12 @@ def perform_clone(arguments):
         cmd = ['git', 'clone', uri]
         subprocess.call(cmd)
 
+
 sub = subparsers.add_parser('clone',
                             help='Clone from an organisation or a user')
-sub.add_argument('context', nargs=1, help='name of organisation or user')
+sub.add_argument('context', nargs=1, help='Name of organisation or user')
 sub.add_argument('repository', nargs='*',
-                 help='name of repositories to fetch, leave empty to fetch all')
+                 help='Name of repositories to clone, leave empty to clone all')
 sub.set_defaults(func=perform_clone)
 
 
@@ -105,7 +120,6 @@ def perform_pull(arguments):
         dirnames = arguments.repository
     else:
         dirnames = os.listdir('.')
-
     for child in dirnames:
         if not os.path.isdir(child):
             continue
@@ -117,10 +131,11 @@ def perform_pull(arguments):
         subprocess.call(cmd)
         os.chdir('..')
 
+
 sub = subparsers.add_parser('pull',
-                            help='Pull distinct or all repositories in  folder.')
+                            help='Pull distinct or all repositories in folder.')
 sub.add_argument('repository', nargs='*',
-                 help='name of repositories to fetch, leave empty to fetch all')
+                 help='Name of repositories to pull, leave empty to pull all')
 sub.set_defaults(func=perform_pull)
 
 
@@ -147,10 +162,11 @@ def perform_backup(arguments):
             cmd = ['git', 'clone', '--bare', '--mirror', uri]
             subprocess.call(cmd)
 
+
 sub = subparsers.add_parser('backup',
                             help='Backup all repositories from an organisation '
                                  'or a user')
-sub.add_argument('context', nargs=1, help='name of organisation or user')
+sub.add_argument('context', nargs=1, help='Name of organisation or user')
 sub.set_defaults(func=perform_backup)
 
 
@@ -171,11 +187,12 @@ def perform_status(arguments):
         subprocess.call(cmd)
         os.chdir('..')
 
+
 sub = subparsers.add_parser('st',
                             help='Status of distinct or all repositories in '
                                  'current folder.')
 sub.add_argument('repository', nargs='*',
-                 help='name of repositories to check, leave empty to check all')
+                 help='Name of repositories to show, leave empty to show all')
 sub.set_defaults(func=perform_status)
 
 
@@ -184,7 +201,6 @@ def perform_b(arguments):
         dirnames = arguments.repository
     else:
         dirnames = os.listdir('.')
-
     for child in dirnames:
         if not os.path.isdir(child):
             continue
@@ -201,8 +217,87 @@ sub = subparsers.add_parser('b',
                             help='Show branches of distinct or all '
                                  'repositories in current folder.')
 sub.add_argument('repository', nargs='*',
-                 help='name of repositories to show, leave empty to show all')
+                 help='Name of repositories to show, leave empty to show all')
 sub.set_defaults(func=perform_b)
+
+
+def perform_diff(arguments):
+    if arguments.repository:
+        dirnames = arguments.repository
+    else:
+        dirnames = os.listdir('.')
+    for child in dirnames:
+        if not os.path.isdir(child):
+            continue
+        if not '.git' in os.listdir(child):
+            continue
+        os.chdir(child)
+        print "Diff for '%s'" % child
+        cmd = ['git', 'diff']
+        subprocess.call(cmd)
+        os.chdir('..')
+
+
+sub = subparsers.add_parser('diff',
+                            help='Show diff of distinct or all '
+                                 'repositories in current folder.')
+sub.add_argument('repository', nargs='*',
+                 help='Name of repositories to show diff of, leave empty to ' +\
+                      'show all')
+sub.set_defaults(func=perform_diff)
+
+
+def perform_cia(arguments):
+    if arguments.repository:
+        dirnames = arguments.repository
+    else:
+        dirnames = os.listdir('.')
+    message = '"' + arguments.message[0] + '"'
+    for child in dirnames:
+        if not os.path.isdir(child):
+            continue
+        if not '.git' in os.listdir(child):
+            continue
+        os.chdir(child)
+        print "Commit all changes resources for '%s'" % child
+        cmd = ['git', 'cia', '-m', message]
+        subprocess.call(cmd)
+        os.chdir('..')
+
+
+sub = subparsers.add_parser('cia',
+                            help='Commit all changes of distinct or all '
+                                 'repositories in current folder.')
+sub.add_argument('message', nargs=1, help='Commit message')
+sub.add_argument('repository', nargs='*',
+                 help='Name of repositories to commit, leave empty to ' +\
+                      'commit all')
+sub.set_defaults(func=perform_cia)
+
+
+def perform_push(arguments):
+    if arguments.repository:
+        dirnames = arguments.repository
+    else:
+        dirnames = os.listdir('.')
+    for child in dirnames:
+        if not os.path.isdir(child):
+            continue
+        if not '.git' in os.listdir(child):
+            continue
+        os.chdir(child)
+        print "Perform push for '%s'" % child
+        cmd = ['git', 'push', 'origin', get_branch()]
+        subprocess.call(cmd)
+        os.chdir('..')
+
+
+sub = subparsers.add_parser('push',
+                            help='Push distinct or all repositories in folder.')
+sub.add_argument('repository', nargs='*',
+                 help='Name of repositories to push, leave empty to push all')
+sub.set_defaults(func=perform_push)
+
 
 if __name__ == '__main__':
     args = mainparser.parse_args()
