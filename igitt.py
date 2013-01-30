@@ -139,6 +139,16 @@ sub.add_argument('repository', nargs='*',
 sub.set_defaults(func=perform_pull)
 
 
+def perform(cmd):
+    pr = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    stdout, stderr = pr.communicate()
+    print stdout
+    if pr.returncode != 0:
+        print '%s failed to perform: exit code %s' \
+            % (' '.join(cmd), pr.returncode)
+        print stderr
+
+
 def perform_backup(arguments):
     context = arguments.context[0]
     if not context in os.listdir('.'):
@@ -153,14 +163,12 @@ def perform_backup(arguments):
         if fs_name in contents:
             print "Fetching existing local repository '%s'" % fs_name
             os.chdir(fs_name)
-            cmd = ['git', 'fetch', 'origin']
-            subprocess.call(cmd)
+            perform(['git', 'fetch', 'origin'])
             os.chdir('..')
         else:
             print "Cloning new repository '%s'" % fs_name
             uri = base_uri % (context, name)
-            cmd = ['git', 'clone', '--bare', '--mirror', uri]
-            subprocess.call(cmd)
+            perform(['git', 'clone', '--bare', '--mirror', uri])
 
 
 sub = subparsers.add_parser('backup',
@@ -175,7 +183,6 @@ def perform_status(arguments):
         dirnames = arguments.repository
     else:
         dirnames = os.listdir('.')
-
     for child in dirnames:
         if not os.path.isdir(child):
             continue
