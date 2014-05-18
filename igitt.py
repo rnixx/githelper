@@ -114,8 +114,9 @@ def perform_clone(arguments):
 sub = subparsers.add_parser('clone',
                             help='Clone from an organisation or a user')
 sub.add_argument('context', nargs=1, help='Name of organisation or user')
-sub.add_argument('repository', nargs='*',
-                 help='Name of repositories to clone, leave empty to clone all')
+sub.add_argument(
+    'repository', nargs='*',
+    help='Name of repositories to clone, leave empty to clone all')
 sub.set_defaults(func=perform_clone)
 
 
@@ -138,7 +139,7 @@ def perform_pull(arguments):
     for child in dirnames:
         if not os.path.isdir(child):
             continue
-        if not '.git' in os.listdir(child):
+        if '.git' not in os.listdir(child):
             continue
         os.chdir(child)
         print "Perform pull for '%s'" % hilite(child, 'blue', True)
@@ -166,7 +167,7 @@ def perform(cmd):
 
 def perform_backup(arguments):
     context = arguments.context[0]
-    if not context in os.listdir('.'):
+    if context not in os.listdir('.'):
         os.mkdir(context)
     os.chdir(context)
     contents = os.listdir('.')
@@ -201,7 +202,7 @@ def perform_status(arguments):
     for child in dirnames:
         if not os.path.isdir(child):
             continue
-        if not '.git' in os.listdir(child):
+        if '.git' not in os.listdir(child):
             continue
         os.chdir(child)
         print "Status for '%s'" % hilite(child, 'blue', True)
@@ -226,7 +227,7 @@ def perform_b(arguments):
     for child in dirnames:
         if not os.path.isdir(child):
             continue
-        if not '.git' in os.listdir(child):
+        if '.git' not in os.listdir(child):
             continue
         os.chdir(child)
         print "Branches for '%s'" % hilite(child, 'blue', True)
@@ -251,7 +252,7 @@ def perform_diff(arguments):
     for child in dirnames:
         if not os.path.isdir(child):
             continue
-        if not '.git' in os.listdir(child):
+        if '.git' not in os.listdir(child):
             continue
         os.chdir(child)
         print "Diff for '%s'" % hilite(child, 'blue', True)
@@ -264,7 +265,7 @@ sub = subparsers.add_parser('diff',
                             help='Show diff of distinct or all '
                                  'repositories in current folder.')
 sub.add_argument('repository', nargs='*',
-                 help='Name of repositories to show diff of, leave empty to ' +\
+                 help='Name of repositories to show diff of, leave empty to '
                       'show all')
 sub.set_defaults(func=perform_diff)
 
@@ -278,7 +279,7 @@ def perform_cia(arguments):
     for child in dirnames:
         if not os.path.isdir(child):
             continue
-        if not '.git' in os.listdir(child):
+        if '.git' not in os.listdir(child):
             continue
         os.chdir(child)
         print "Commit all changes resources for '%s'"\
@@ -293,7 +294,7 @@ sub = subparsers.add_parser('cia',
                                  'repositories in current folder.')
 sub.add_argument('message', nargs=1, help='Commit message')
 sub.add_argument('repository', nargs='*',
-                 help='Name of repositories to commit, leave empty to ' +\
+                 help='Name of repositories to commit, leave empty to '
                       'commit all')
 sub.set_defaults(func=perform_cia)
 
@@ -306,7 +307,7 @@ def perform_push(arguments):
     for child in dirnames:
         if not os.path.isdir(child):
             continue
-        if not '.git' in os.listdir(child):
+        if '.git' not in os.listdir(child):
             continue
         os.chdir(child)
         print "Perform push for '%s'" % hilite(child, 'blue', True)
