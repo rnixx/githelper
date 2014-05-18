@@ -56,6 +56,21 @@ mainparser = ArgumentParser(description='Git helper utilities')
 subparsers = mainparser.add_subparsers(help='commands')
 
 
+def hilite(string, color, bold):
+    # http://stackoverflow.com/questions/5947742/how-to-change-the-output-color-of-echo-in-linux
+    # http://stackoverflow.com/questions/2330245/python-change-text-color-in-shell
+    attr = []
+    if color == 'green':
+        attr.append('32')
+    elif color == 'red':
+        attr.append('31')
+    elif color == 'blue':
+        attr.append('34')
+    if bold:
+        attr.append('1')
+    return '\x1b[%sm%s\x1b[0m' % (';'.join(attr), string)
+
+
 def query_repos(context):
     org_url = 'https://api.github.com/orgs/%s/repos' % context
     user_url = 'https://api.github.com/users/%s/repos' % context
@@ -79,7 +94,7 @@ def query_repos(context):
             break
         data += page_data
         page += 1
-    print "Fetched %i reposirories for '%s'" % (len(data), context)
+    print "Fetched %i repositories for '%s'" % (len(data), context)
     return data
 
 
@@ -126,7 +141,7 @@ def perform_pull(arguments):
         if not '.git' in os.listdir(child):
             continue
         os.chdir(child)
-        print "Perform pull for '%s'" % child
+        print "Perform pull for '%s'" % hilite(child, 'blue', True)
         cmd = ['git', 'pull', 'origin', get_branch()]
         subprocess.call(cmd)
         os.chdir('..')
@@ -189,7 +204,7 @@ def perform_status(arguments):
         if not '.git' in os.listdir(child):
             continue
         os.chdir(child)
-        print "Status for '%s'" % child
+        print "Status for '%s'" % hilite(child, 'blue', True)
         cmd = ['git', 'status']
         subprocess.call(cmd)
         os.chdir('..')
@@ -214,7 +229,7 @@ def perform_b(arguments):
         if not '.git' in os.listdir(child):
             continue
         os.chdir(child)
-        print "Branches for '%s'" % child
+        print "Branches for '%s'" % hilite(child, 'blue', True)
         cmd = ['git', 'branch']
         subprocess.call(cmd)
         os.chdir('..')
@@ -239,7 +254,7 @@ def perform_diff(arguments):
         if not '.git' in os.listdir(child):
             continue
         os.chdir(child)
-        print "Diff for '%s'" % child
+        print "Diff for '%s'" % hilite(child, 'blue', True)
         cmd = ['git', 'diff']
         subprocess.call(cmd)
         os.chdir('..')
@@ -266,7 +281,8 @@ def perform_cia(arguments):
         if not '.git' in os.listdir(child):
             continue
         os.chdir(child)
-        print "Commit all changes resources for '%s'" % child
+        print "Commit all changes resources for '%s'"\
+            % hilite(child, 'blue', True)
         cmd = ['git', 'cia', '-m', message]
         subprocess.call(cmd)
         os.chdir('..')
@@ -293,7 +309,7 @@ def perform_push(arguments):
         if not '.git' in os.listdir(child):
             continue
         os.chdir(child)
-        print "Perform push for '%s'" % child
+        print "Perform push for '%s'" % hilite(child, 'blue', True)
         cmd = ['git', 'push', 'origin', get_branch()]
         subprocess.call(cmd)
         os.chdir('..')
