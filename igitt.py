@@ -35,6 +35,9 @@ For committing all repository changes, use:
 For pushing all committed changes, use:
     igitt push [PACKAGE]
 
+For discarding all changes, use:
+    igitt co [package]
+
 
 Install
 -------
@@ -111,12 +114,20 @@ def perform_clone(arguments):
         subprocess.call(cmd)
 
 
-sub = subparsers.add_parser('clone',
-                            help='Clone from an organisation or a user')
-sub.add_argument('context', nargs=1, help='Name of organisation or user')
+sub = subparsers.add_parser(
+    'clone',
+    help='Clone from an organisation or a user'
+)
 sub.add_argument(
-    'repository', nargs='*',
-    help='Name of repositories to clone, leave empty to clone all')
+    'context',
+    nargs=1,
+    help='Name of organisation or user'
+)
+sub.add_argument(
+    'repository',
+    nargs='*',
+    help='Name of repositories to clone, leave empty to clone all'
+)
 sub.set_defaults(func=perform_clone)
 
 
@@ -148,10 +159,15 @@ def perform_pull(arguments):
         os.chdir('..')
 
 
-sub = subparsers.add_parser('pull',
-                            help='Pull distinct or all repositories in folder.')
-sub.add_argument('repository', nargs='*',
-                 help='Name of repositories to pull, leave empty to pull all')
+sub = subparsers.add_parser(
+    'pull',
+    help='Pull distinct or all repositories in folder.'
+)
+sub.add_argument(
+    'repository',
+    nargs='*',
+    help='Name of repositories to pull, leave empty to pull all'
+)
 sub.set_defaults(func=perform_pull)
 
 
@@ -187,10 +203,15 @@ def perform_backup(arguments):
             perform(['git', 'clone', '--bare', '--mirror', uri])
 
 
-sub = subparsers.add_parser('backup',
-                            help='Backup all repositories from an organisation '
-                                 'or a user')
-sub.add_argument('context', nargs=1, help='Name of organisation or user')
+sub = subparsers.add_parser(
+    'backup',
+    help='Backup all repositories from an organisation or a user'
+)
+sub.add_argument(
+    'context',
+    nargs=1,
+    help='Name of organisation or user'
+)
 sub.set_defaults(func=perform_backup)
 
 
@@ -211,11 +232,15 @@ def perform_status(arguments):
         os.chdir('..')
 
 
-sub = subparsers.add_parser('st',
-                            help='Status of distinct or all repositories in '
-                                 'current folder.')
-sub.add_argument('repository', nargs='*',
-                 help='Name of repositories to show, leave empty to show all')
+sub = subparsers.add_parser(
+    'st',
+    help='Status of distinct or all repositories in current folder.'
+)
+sub.add_argument(
+    'repository',
+    nargs='*',
+    help='Name of repositories to show, leave empty to show all'
+)
 sub.set_defaults(func=perform_status)
 
 
@@ -236,11 +261,15 @@ def perform_b(arguments):
         os.chdir('..')
 
 
-sub = subparsers.add_parser('b',
-                            help='Show branches of distinct or all '
-                                 'repositories in current folder.')
-sub.add_argument('repository', nargs='*',
-                 help='Name of repositories to show, leave empty to show all')
+sub = subparsers.add_parser(
+    'b',
+    help='Show branches of distinct or all repositories in current folder.'
+)
+sub.add_argument(
+    'repository',
+    nargs='*',
+    help='Name of repositories to show, leave empty to show all'
+)
 sub.set_defaults(func=perform_b)
 
 
@@ -261,12 +290,15 @@ def perform_diff(arguments):
         os.chdir('..')
 
 
-sub = subparsers.add_parser('diff',
-                            help='Show diff of distinct or all '
-                                 'repositories in current folder.')
-sub.add_argument('repository', nargs='*',
-                 help='Name of repositories to show diff of, leave empty to '
-                      'show all')
+sub = subparsers.add_parser(
+    'diff',
+    help='Show diff of distinct or all repositories in current folder.'
+)
+sub.add_argument(
+    'repository',
+    nargs='*',
+    help='Name of repositories to show diff of, leave empty to show all'
+)
 sub.set_defaults(func=perform_diff)
 
 
@@ -289,13 +321,21 @@ def perform_cia(arguments):
         os.chdir('..')
 
 
-sub = subparsers.add_parser('cia',
-                            help='Commit all changes of distinct or all '
-                                 'repositories in current folder.')
-sub.add_argument('message', nargs=1, help='Commit message')
-sub.add_argument('repository', nargs='*',
-                 help='Name of repositories to commit, leave empty to '
-                      'commit all')
+sub = subparsers.add_parser(
+    'cia',
+    help='Commit all changes of distinct or all repositories in current '
+         'folder.'
+)
+sub.add_argument(
+    'message',
+    nargs=1,
+    help='Commit message'
+)
+sub.add_argument(
+    'repository',
+    nargs='*',
+    help='Name of repositories to commit, leave empty to commit all'
+)
 sub.set_defaults(func=perform_cia)
 
 
@@ -316,11 +356,45 @@ def perform_push(arguments):
         os.chdir('..')
 
 
-sub = subparsers.add_parser('push',
-                            help='Push distinct or all repositories in folder.')
-sub.add_argument('repository', nargs='*',
-                 help='Name of repositories to push, leave empty to push all')
+sub = subparsers.add_parser(
+    'push',
+    help='Push distinct or all repositories in folder.'
+)
+sub.add_argument(
+    'repository',
+    nargs='*',
+    help='Name of repositories to push, leave empty to push all'
+)
 sub.set_defaults(func=perform_push)
+
+
+def perform_co(arguments):
+    if arguments.repository:
+        dirnames = arguments.repository
+    else:
+        dirnames = os.listdir('.')
+    for child in dirnames:
+        if not os.path.isdir(child):
+            continue
+        if '.git' not in os.listdir(child):
+            continue
+        os.chdir(child)
+        print "Perform checkout for '%s'" % hilite(child, 'blue', True)
+        cmd = ['git', 'checkout', '.']
+        subprocess.call(cmd)
+        os.chdir('..')
+
+
+sub = subparsers.add_parser(
+    'co',
+    help='Discard all uncommited changes.'
+)
+sub.add_argument(
+    'repository',
+    nargs='*',
+    help='Name of repositories to discard, leave empty to discard all'
+)
+sub.set_defaults(func=perform_co)
 
 
 if __name__ == '__main__':
