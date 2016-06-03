@@ -85,7 +85,7 @@ class IgittConfig(object):
         if config_folder_exists and not os.path.isdir(self.config_folder_path):
             raise RuntimeError("Expected config folder not a directory")
         if not config_folder_exists:
-            os.mkdir(self.config_folder_path):
+            os.mkdir(self.config_folder_path)
         if not os.path.exists(self.config_file_path):
             with open(self.config_file_path, 'w') as f:
                 f.write('')
@@ -132,14 +132,15 @@ class IgittConfig(object):
 
 _dvcs_types = dict()
 
+
 class dvcs_type(object):
 
     def __init__(self, name):
         self.name = name
 
     def __call__(self, cls):
-        cls.dvcs_type = name
-        _dvcs_types[name] = cls
+        cls.dvcs_type = self.name
+        _dvcs_types[self.name] = cls
         return cls
 
 
