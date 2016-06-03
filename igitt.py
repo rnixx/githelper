@@ -11,6 +11,9 @@ development or if you want to perform backups of a github account.
 Usage
 -----
 
+For adding a dvcs url, use:
+    igitt add_dvcs URL
+
 For cloning repositories, use:
     igitt clone CONTEXT [PACKAGE]
 
@@ -47,6 +50,7 @@ Checkout this script and create a symlink in '/usr/local/bin'.
 This script requires python2.7 or python2.6 with 'argparse' package installed
 """
 
+import ConfigParser
 import os
 import sys
 import urllib2
@@ -72,6 +76,99 @@ def hilite(string, color, bold):
     if bold:
         attr.append('1')
     return '\x1b[%sm%s\x1b[0m' % (';'.join(attr), string)
+
+
+class IgittConfig(object):
+
+    def __init__(self):
+        config_folder_exists = os.os.path.exists(self.config_folder_path)
+        if config_folder_exists and not os.path.isdir(self.config_folder_path):
+            raise RuntimeError("Expected config folder not a directory")
+        if not config_folder_exists:
+            os.mkdir(self.config_folder_path):
+        if not os.path.exists(self.config_file_path):
+            with open(self.config_file_path, 'w') as f:
+                f.write('')
+        self.config = ConfigParser.ConfigParser()
+        self.config.read(cfg_path)
+
+    @property
+    def user_home(self):
+        return os.path.expanduser("~")
+
+    @property
+    def config_folder_path(self):
+        return os.path.join(self.user_home, '.config')
+
+    @property
+    def config_file_path(self):
+        return os.path.join(self.config_folder_path, '.igitt')
+
+    def __getitem__(self, key):
+        if not key in self.__iter__():
+            raise KeyError(key)
+        return DVCS.factory(self.config, key)
+
+    def __setitem__(self, key, value):
+        assert(isinstance(value, DVCS))
+        if self.config.has_section(key):
+            self.config.remove_section(key)
+        self.config.add_section(key)
+        for attr, attr_value in value.attrs.items():
+            self.config.set(key, attr, attr_value)
+
+    def __delitem__(self):
+        if not self.config.remove_section(key):
+            raise KeyError(key)
+        self.config.remove_section(key)
+
+    def __iter__(self):
+        return iter(self.config.sections())
+
+    def __call__(self):
+        with open(self.config_file_path, 'wb') as f:
+            config.write(f)
+
+
+_dvcs_types = dict()
+
+class dvcs_type(object):
+
+    def __init__(self, name):
+        self.name = name
+
+    def __call__(self, cls):
+        cls.dvcs_type = name
+        _dvcs_types[name] = cls
+        return cls
+
+
+class DVCS(dict):
+
+    @classmethod
+    def factory(cls, config, name):
+        kw = dict(config.items(name))
+        return _dvcs_types[kw['dvcs_type']](**kw)
+
+    def login(self):
+        raise NotImplementedError("Abstract DVCS doe not implement login")
+
+    def query_repos(self):
+        raise NotImplementedError("Abstract DVCS doe not implement query_repos")
+
+
+@dvcs_type('github')
+class GithubDVCS(DVCS):
+
+    def login(self):
+        pass
+
+
+@dvcs_type('gitlab')
+class GitlabDVCS(DVCS):
+
+    def login(self):
+        pass
 
 
 def query_repos(context):
