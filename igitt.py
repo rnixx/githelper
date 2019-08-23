@@ -49,15 +49,19 @@ Checkout this script and create a symlink in '/usr/local/bin'.
 
 This script requires python2.7 or python2.6 with 'argparse' package installed
 """
-
-import ConfigParser
-import os
-import sys
-import urllib2
-import json
-import subprocess
 from argparse import ArgumentParser
-
+try:
+    from urllib2 import URLError
+    from urllib2 import urlopen
+    import ConfigParser
+except ImportError:
+    from urllib.request import URLError
+    from urllib.request import urlopen
+    import configparser as ConfigParser
+import json
+import os
+import subprocess
+import sys
 
 mainparser = ArgumentParser(description='Git helper utilities')
 subparsers = mainparser.add_subparsers(help='commands')
@@ -152,10 +156,11 @@ class DVCS(dict):
         return _dvcs_types[kw['dvcs_type']](**kw)
 
     def login(self):
-        raise NotImplementedError("Abstract DVCS doe not implement login")
+        raise NotImplementedError("Abstract DVCS does not implement login")
 
     def query_repos(self):
-        raise NotImplementedError("Abstract DVCS doe not implement query_repos")
+        raise NotImplementedError(
+            "Abstract DVCS does not implement query_repos")
 
 
 @dvcs_type('github')
@@ -181,13 +186,13 @@ def query_repos(context):
     while True:
         try:
             url = query % (org_url, page)
-            res = urllib2.urlopen(url)
-        except urllib2.URLError, e:
+            res = urlopen(url)
+        except URLError as e:
             try:
                 url = query % (user_url, page)
-                res = urllib2.urlopen(url)
-            except urllib2.URLError, e:
-                print e
+                res = urlopen(url)
+            except URLError as e:
+                print(e)
                 sys.exit(0)
         page_data = json.loads(res.read())
         res.close()
@@ -195,7 +200,7 @@ def query_repos(context):
             break
         data += page_data
         page += 1
-    print "Fetched %i repositories for '%s'" % (len(data), context)
+    print("Fetched %i repositories for '%s'" % (len(data), context))
     return data
 
 
@@ -251,7 +256,7 @@ def perform_pull(arguments):
         if '.git' not in os.listdir(child):
             continue
         os.chdir(child)
-        print "Perform pull for '%s'" % hilite(child, 'blue', True)
+        print("Perform pull for '%s'" % hilite(child, 'blue', True))
         cmd = ['git', 'pull', 'origin', get_branch()]
         subprocess.call(cmd)
         os.chdir('..')
@@ -272,11 +277,11 @@ sub.set_defaults(func=perform_pull)
 def perform(cmd):
     pr = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = pr.communicate()
-    print stdout
+    print(stdout)
     if pr.returncode != 0:
-        print '%s failed to perform: exit code %s' \
-            % (' '.join(cmd), pr.returncode)
-        print stderr
+        print('%s failed to perform: exit code %s' \
+            % (' '.join(cmd), pr.returncode))
+        print(stderr)
 
 
 def perform_backup(arguments):
@@ -291,12 +296,12 @@ def perform_backup(arguments):
         name = repo['name']
         fs_name = '%s.git' % name
         if fs_name in contents:
-            print "Fetching existing local repository '%s'" % fs_name
+            print("Fetching existing local repository '%s'" % fs_name)
             os.chdir(fs_name)
             perform(['git', 'fetch', 'origin'])
             os.chdir('..')
         else:
-            print "Cloning new repository '%s'" % fs_name
+            print("Cloning new repository '%s'" % fs_name)
             uri = base_uri % (context, name)
             perform(['git', 'clone', '--bare', '--mirror', uri])
 
@@ -324,7 +329,7 @@ def perform_status(arguments):
         if '.git' not in os.listdir(child):
             continue
         os.chdir(child)
-        print "Status for '%s'" % hilite(child, 'blue', True)
+        print("Status for '%s'" % hilite(child, 'blue', True))
         cmd = ['git', 'status']
         subprocess.call(cmd)
         os.chdir('..')
@@ -353,7 +358,7 @@ def perform_b(arguments):
         if '.git' not in os.listdir(child):
             continue
         os.chdir(child)
-        print "Branches for '%s'" % hilite(child, 'blue', True)
+        print("Branches for '%s'" % hilite(child, 'blue', True))
         cmd = ['git', 'branch']
         subprocess.call(cmd)
         os.chdir('..')
@@ -382,7 +387,7 @@ def perform_diff(arguments):
         if '.git' not in os.listdir(child):
             continue
         os.chdir(child)
-        print "Diff for '%s'" % hilite(child, 'blue', True)
+        print("Diff for '%s'" % hilite(child, 'blue', True))
         cmd = ['git', 'diff']
         subprocess.call(cmd)
         os.chdir('..')
@@ -412,8 +417,8 @@ def perform_cia(arguments):
         if '.git' not in os.listdir(child):
             continue
         os.chdir(child)
-        print "Commit all changes resources for '%s'"\
-            % hilite(child, 'blue', True)
+        print("Commit all changes resources for '%s'"\
+            % hilite(child, 'blue', True))
         cmd = ['git', 'cia', '-m', message]
         subprocess.call(cmd)
         os.chdir('..')
@@ -448,7 +453,7 @@ def perform_push(arguments):
         if '.git' not in os.listdir(child):
             continue
         os.chdir(child)
-        print "Perform push for '%s'" % hilite(child, 'blue', True)
+        print("Perform push for '%s'" % hilite(child, 'blue', True))
         cmd = ['git', 'push', 'origin', get_branch()]
         subprocess.call(cmd)
         os.chdir('..')
@@ -477,7 +482,7 @@ def perform_co(arguments):
         if '.git' not in os.listdir(child):
             continue
         os.chdir(child)
-        print "Perform checkout for '%s'" % hilite(child, 'blue', True)
+        print("Perform checkout for '%s'" % hilite(child, 'blue', True))
         cmd = ['git', 'checkout', '.']
         subprocess.call(cmd)
         os.chdir('..')
