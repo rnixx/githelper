@@ -241,8 +241,8 @@ def get_branch():
         stderr=subprocess.PIPE, close_fds=True)
     output = p.stdout.readlines()
     for line in output:
-        if line.strip().startswith('*'):
-            return line.strip().strip('*').strip()
+        if line.strip().startswith(b'*'):
+            return line.strip().strip(b'*').strip()
 
 
 def perform_pull(arguments):
