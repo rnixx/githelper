@@ -304,7 +304,7 @@ def perform_cia(arguments):
             continue
         os.chdir(child)
         print("Commit all changes resources for '%s'" % hilite(child, "blue", True))
-        cmd = ["git", "cia", "-m", message]
+        cmd = ["git", "cia", "-am", message]
         subprocess.call(cmd)
         os.chdir("..")
 
