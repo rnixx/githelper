@@ -138,6 +138,7 @@ def get_branch():
     )
     output = p.stdout.readlines()
     for line in output:
+        line = line.decode("utf-8")  # python3 returns bytes, python2 doesn't break.
         if line.strip().startswith("*"):
             return line.strip().strip("*").strip()
 
