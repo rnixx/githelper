@@ -30,7 +30,7 @@ For showing repository diff, use:
     igitt diff [PACKAGE]
 
 For committing all repository changes, use:
-    igitt cia 'MESSAGE' [PACKAGE]
+    igitt cia "MESSAGE" [PACKAGE]
 
 For pushing all committed changes, use:
     igitt push [PACKAGE]
@@ -296,7 +296,7 @@ def perform_cia(arguments):
         dirnames = arguments.repository
     else:
         dirnames = os.listdir(".")
-    message = '"' + arguments.message[0] + '"'
+    message = arguments.message[0]
     for child in dirnames:
         if not os.path.isdir(child):
             continue
