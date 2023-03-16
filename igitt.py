@@ -1,8 +1,7 @@
 #! /usr/bin/env python
 
-"""
-Simple helper script for working on multiple git repositories in a
-specific directory.
+"""Simple helper script for working on multiple git repositories in a specific
+directory.
 
 This script is useful if you work with 'mr.developer' sources for project
 development or if you want to perform backups of a github account.
@@ -47,14 +46,13 @@ Checkout this script and create a symlink in '/usr/local/bin'.
 This script requires python2.7 or python2.6 with 'argparse' package installed
 """
 
-from __future__ import print_function
-from argparse import ArgumentParser
-
 import json
 import os
 import subprocess
 import sys
-import six.moves.urllib.request, six.moves.urllib.error, six.moves.urllib.parse
+import urllib
+
+from argparse import ArgumentParser
 
 
 mainparser = ArgumentParser(description="Git helper utilities")
@@ -73,7 +71,7 @@ def hilite(string, color, bold):
         attr.append("34")
     if bold:
         attr.append("1")
-    return "\x1b[%sm%s\x1b[0m" % (";".join(attr), string)
+    return "\x1b[{}m{}\x1b[0m".format(";".join(attr), string)
 
 
 def query_repos(context):
@@ -85,12 +83,12 @@ def query_repos(context):
     while True:
         try:
             url = query % (org_url, page)
-            res = six.moves.urllib.request.urlopen(url)
-        except six.moves.urllib.error.URLError as e:
+            res = urllib.request.urlopen(url)
+        except urllib.error.URLError:
             try:
                 url = query % (user_url, page)
-                res = six.moves.urllib.request.urlopen(url)
-            except six.moves.urllib.error.URLError as e:
+                res = urllib.request.urlopen(url)
+            except urllib.error.URLError as e:
                 print(e)
                 sys.exit(0)
         page_data = json.loads(res.read())
@@ -174,7 +172,7 @@ def perform(cmd):
     stdout, stderr = pr.communicate()
     print(stdout)
     if pr.returncode != 0:
-        print("%s failed to perform: exit code %s" % (" ".join(cmd), pr.returncode))
+        print("{} failed to perform: exit code {}".format(" ".join(cmd), pr.returncode))
         print(stderr)
 
 
