@@ -59,6 +59,10 @@ mainparser = ArgumentParser(description="Git helper utilities")
 subparsers = mainparser.add_subparsers(help="commands")
 
 
+def listdir(path="."):
+    return sorted(os.listdir(path))
+
+
 def hilite(string, color, bold):
     # http://stackoverflow.com/questions/5947742/how-to-change-the-output-color-of-echo-in-linux
     # http://stackoverflow.com/questions/2330245/python-change-text-color-in-shell
@@ -145,11 +149,11 @@ def perform_pull(arguments):
     if arguments.repository:
         dirnames = arguments.repository
     else:
-        dirnames = os.listdir(".")
+        dirnames = listdir(".")
     for child in dirnames:
         if not os.path.isdir(child):
             continue
-        if ".git" not in os.listdir(child):
+        if ".git" not in listdir(child):
             continue
         os.chdir(child)
         print("Perform pull for '%s'" % hilite(child, "blue", True))
@@ -178,10 +182,10 @@ def perform(cmd):
 
 def perform_backup(arguments):
     context = arguments.context[0]
-    if context not in os.listdir("."):
+    if context not in listdir("."):
         os.mkdir(context)
     os.chdir(context)
-    contents = os.listdir(".")
+    contents = listdir(".")
     data = query_repos(context)
     base_uri = "git@github.com:%s/%s.git"
     for repo in data:
@@ -209,11 +213,11 @@ def perform_status(arguments):
     if arguments.repository:
         dirnames = arguments.repository
     else:
-        dirnames = os.listdir(".")
+        dirnames = listdir(".")
     for child in dirnames:
         if not os.path.isdir(child):
             continue
-        if ".git" not in os.listdir(child):
+        if ".git" not in listdir(child):
             continue
         os.chdir(child)
         print("Status for '%s'" % hilite(child, "blue", True))
@@ -237,11 +241,11 @@ def perform_b(arguments):
     if arguments.repository:
         dirnames = arguments.repository
     else:
-        dirnames = os.listdir(".")
+        dirnames = listdir(".")
     for child in dirnames:
         if not os.path.isdir(child):
             continue
-        if ".git" not in os.listdir(child):
+        if ".git" not in listdir(child):
             continue
         os.chdir(child)
         print("Branches for '%s'" % hilite(child, "blue", True))
@@ -265,11 +269,11 @@ def perform_diff(arguments):
     if arguments.repository:
         dirnames = arguments.repository
     else:
-        dirnames = os.listdir(".")
+        dirnames = listdir(".")
     for child in dirnames:
         if not os.path.isdir(child):
             continue
-        if ".git" not in os.listdir(child):
+        if ".git" not in listdir(child):
             continue
         os.chdir(child)
         print("Diff for '%s'" % hilite(child, "blue", True))
@@ -293,12 +297,12 @@ def perform_cia(arguments):
     if arguments.repository:
         dirnames = arguments.repository
     else:
-        dirnames = os.listdir(".")
+        dirnames = listdir(".")
     message = arguments.message[0]
     for child in dirnames:
         if not os.path.isdir(child):
             continue
-        if ".git" not in os.listdir(child):
+        if ".git" not in listdir(child):
             continue
         os.chdir(child)
         print("Commit all changes resources for '%s'" % hilite(child, "blue", True))
@@ -324,11 +328,11 @@ def perform_push(arguments):
     if arguments.repository:
         dirnames = arguments.repository
     else:
-        dirnames = os.listdir(".")
+        dirnames = listdir(".")
     for child in dirnames:
         if not os.path.isdir(child):
             continue
-        if ".git" not in os.listdir(child):
+        if ".git" not in listdir(child):
             continue
         os.chdir(child)
         print("Perform push for '%s'" % hilite(child, "blue", True))
@@ -350,11 +354,11 @@ def perform_co(arguments):
     if arguments.repository:
         dirnames = arguments.repository
     else:
-        dirnames = os.listdir(".")
+        dirnames = listdir(".")
     for child in dirnames:
         if not os.path.isdir(child):
             continue
-        if ".git" not in os.listdir(child):
+        if ".git" not in listdir(child):
             continue
         os.chdir(child)
         print("Perform checkout for '%s'" % hilite(child, "blue", True))
