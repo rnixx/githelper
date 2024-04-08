@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/env python3
 
 """Simple helper script for working on multiple git repositories in a specific
 directory.
